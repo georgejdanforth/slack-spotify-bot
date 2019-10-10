@@ -1,3 +1,5 @@
+import logging
+
 from aiohttp import ClientSession, web
 from spotify_client import SpotifyClient
 
@@ -11,7 +13,7 @@ def is_valid_request(body):
         'event' in body
         and 'links' in body['event']
         and 'channel' in body['event']
-        and body['event']['channel'] == spotify_client.CHANNEL_ID
+        and body['event']['channel'] == spotify_client.slack_channel_id
     )
 
 
@@ -51,4 +53,5 @@ async def token_info(request):
 if __name__ == '__main__':
     app = web.Application()
     app.add_routes(routes)
+    logging.basicConfig(level=logging.DEBUG)
     web.run_app(app)
