@@ -1,9 +1,9 @@
-import aiohttp
 import base64
 import datetime
 import json
 import re
 import urllib
+
 
 class SpotifyClient:
 
@@ -19,6 +19,8 @@ class SpotifyClient:
 
     def __init__(self):
 
+        self.client_session = None
+
         self.authorization_code = None
         self.access_token = None
         self.token_expires = None
@@ -31,7 +33,6 @@ class SpotifyClient:
 
         self._validate_config(config)
         self._init_config(config)
-
 
     @property
     def redirect_uri(self):
@@ -94,10 +95,9 @@ class SpotifyClient:
 
         now = datetime.datetime.utcnow()
 
-        async with aiohttp.ClientSession() as client:
-            async with client.post(self.SPOTIFY_TOKEN_URL, headers=headers, params=params) as response:
-                response_json = await response.json()
-                self._update_tokens(now, response_json)
+        async with self.client_session.post(self.SPOTIFY_TOKEN_URL, headers=headers, params=params) as response:
+            response_json = await response.json()
+            self._update_tokens(now, response_json)
 
     async def _refresh_access_token(self):
         headers={
@@ -111,10 +111,9 @@ class SpotifyClient:
 
         now = datetime.datetime.utcnow()
 
-        async with aiohttp.ClientSession() as client:
-            async with client.post(self.SPOTIFY_TOKEN_URL, headers=headers, params=params) as response:
-                response_json = await response.json()
-                self._update_tokens(now, response_json)
+        async with self.client_session.post(self.SPOTIFY_TOKEN_URL, headers=headers, params=params) as response:
+            response_json = await response.json()
+            self._update_tokens(now, response_json)
 
     async def add_tracks(self, links):
         track_uris = []
@@ -138,10 +137,10 @@ class SpotifyClient:
             'position': 0
         }
 
-        async with aiohttp.ClientSession() as client:
-            async with client.post(self._playlist_add_url, headers=headers, json=body) as response:
-                print(json.dumps(response.__dict__, default=str, indent=2, sort_keys=True))
+        async with self.client_session.post(self._playlist_add_url, headers=headers, json=body) as response:
+            print(json.dumps(response.__dict__, default=str, indent=2, sort_keys=True))
 
     async def authorize(self, authorization_code):
         self.authorization_code = authorization_code
         await self._set_tokens()
+

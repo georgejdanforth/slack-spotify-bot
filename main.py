@@ -5,15 +5,14 @@ from spotify_client import SpotifyClient
 
 
 routes = web.RouteTableDef()
-spotify_client = SpotifyClient()
 
 
-def is_valid_request(body):
+def is_valid_request(body, slack_channel_id):
     return (
         'event' in body
         and 'links' in body['event']
         and 'channel' in body['event']
-        and body['event']['channel'] == spotify_client.slack_channel_id
+        and body['event']['channel'] == slack_channel_id
     )
 
 
@@ -23,9 +22,8 @@ async def handler(request):
     if 'challenge' in body:
         return web.Response(text=body['challenge'])
 
-    import json
-    if is_valid_request(body):
-        await spotify_client.add_tracks(body['event']['links'])
+    if is_valid_request(body, request.app['spotify_client'].slack_channel_id):
+        await request.app['spotify_client'].add_tracks(body['event']['links'])
 
     return web.Response()
 
@@ -33,25 +31,41 @@ async def handler(request):
 @routes.get('/authorize/')
 async def authorize(request):
     if 'code' in request.query:
-        await spotify_client.authorize(request.query['code'])
+        await request.app['spotify_client'].authorize(request.query['code'])
         return web.Response(text='Authorized!')
 
-    return web.HTTPFound(spotify_client.auth_redirect_url)
+    return web.HTTPFound(request.app['spotify_client'].auth_redirect_url)
 
 
 @routes.get('/token_info')
 async def token_info(request):
     return web.json_response({
-        'authorization_code': spotify_client.authorization_code,
-        'access_token': spotify_client.access_token,
-        'token_expires': str(spotify_client.token_expires),
-        'refresh_token': spotify_client.refresh_token,
-        'scope': spotify_client.scope
+        'authorization_code': request.app['spotify_client'].authorization_code,
+        'access_token': request.app['spotify_client'].access_token,
+        'token_expires': str(request.app['spotify_client'].token_expires),
+        'refresh_token': request.app['spotify_client'].refresh_token,
+        'scope': request.app['spotify_client'].scope
     })
 
 
+async def startup_spotify_client(app):
+    app['spotify_client'] = SpotifyClient()
+    app['spotify_client'].client_session = await ClientSession().__aenter__()
+
+
+async def cleanup_spotify_client(spp):
+    await app['spotify_client'].client_session.__aexit__(None, None, None)
+
+
 if __name__ == '__main__':
-    app = web.Application()
-    app.add_routes(routes)
+
     logging.basicConfig(level=logging.DEBUG)
+
+    app = web.Application()
+
+    app.on_startup.append(startup_spotify_client)
+    app.on_cleanup.append(cleanup_spotify_client)
+    app.add_routes(routes)
+
     web.run_app(app)
+
