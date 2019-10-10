@@ -1,0 +1,7 @@
+{
+    "server_domain": "Domain name or IP of the server hosting this service",
+    "slack_channel_id": "ID of the Slack channel to listen to for spotify links"
+    "spotify_client_id": "Spotify API client ID",
+    "spotify_client_secret": "Spotify API client secret",
+    "spotify_playlist_id": "ID of the Spotify playlist to insert tracks into",
+}
