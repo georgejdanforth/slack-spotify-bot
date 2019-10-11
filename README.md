@@ -56,3 +56,5 @@ docker run -p 8080:8080 -p 80:80 -d slack-spotify-bot prod
 5. Add open.spotify.com as an _App Unfurl Domain_
 6. Save changes
 7. Navigate back to _Basic Information_ and install the app in your workspace.
+
+You're all done! Posting Spotify links in the Slack channel specified by `slack_channel_id` should now add the tracks to the playlist specified by `spotify_playlist_id`.
