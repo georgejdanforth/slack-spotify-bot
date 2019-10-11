@@ -1,4 +1,5 @@
 import logging
+import sys
 
 from aiohttp import ClientSession, web
 from spotify_client import SpotifyClient
@@ -59,7 +60,17 @@ async def cleanup_spotify_client(spp):
 
 if __name__ == '__main__':
 
-    logging.basicConfig(level=logging.DEBUG)
+    print(sys.argv)
+
+    if len(sys.argv) != 2 or sys.argv[1] not in ['dev', 'prod']:
+        raise ValueError('Expected config param: "dev" or "prod".')
+
+    log_level, port = {
+        'dev': (logging.DEBUG, 8080),
+        'prod': (logging.INFO, 80),
+    }[sys.argv[1]]
+
+    logging.basicConfig(level=log_level)
 
     app = web.Application()
 
@@ -67,5 +78,5 @@ if __name__ == '__main__':
     app.on_cleanup.append(cleanup_spotify_client)
     app.add_routes(routes)
 
-    web.run_app(app)
+    web.run_app(app, port=port)
 
