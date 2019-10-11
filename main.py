@@ -60,8 +60,6 @@ async def cleanup_spotify_client(spp):
 
 if __name__ == '__main__':
 
-    print(sys.argv)
-
     if len(sys.argv) != 2 or sys.argv[1] not in ['dev', 'prod']:
         raise ValueError('Expected config param: "dev" or "prod".')
 
