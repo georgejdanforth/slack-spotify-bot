@@ -38,17 +38,6 @@ async def authorize(request):
     return web.HTTPFound(request.app['spotify_client'].auth_redirect_url)
 
 
-@routes.get('/token_info')
-async def token_info(request):
-    return web.json_response({
-        'authorization_code': request.app['spotify_client'].authorization_code,
-        'access_token': request.app['spotify_client'].access_token,
-        'token_expires': str(request.app['spotify_client'].token_expires),
-        'refresh_token': request.app['spotify_client'].refresh_token,
-        'scope': request.app['spotify_client'].scope
-    })
-
-
 async def startup_spotify_client(app):
     app['spotify_client'] = SpotifyClient()
     app['spotify_client'].client_session = await ClientSession().__aenter__()
