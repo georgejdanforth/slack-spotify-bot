@@ -116,9 +116,12 @@ class SpotifyClient:
             self._update_tokens(now, response_json)
 
     async def add_tracks(self, links):
+        """
+        Extract spotify ID for tracks. Webplayer and desktop app compliant
+        """
         track_uris = []
         for link in links:
-            match = re.search(r'(?<=track/).+?(?=\?)', link['url'])
+            match = re.search(r'(?<=track/).+?(?=\?|$)', link['url'])
             if match:
                 track_uris.append(f'spotify:track:{match.group()}')
 
