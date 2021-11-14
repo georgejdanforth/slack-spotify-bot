@@ -2,24 +2,26 @@ import base64
 import datetime
 import json
 import re
-import urllib
+from urllib.parse import quote_plus
+
+from aiohttp import ClientSession
+
+from slack_spotify_bot.config import Config
 
 
 class SpotifyClient:
 
-    CONFIG_PARAMS = [
-        'server_domain',
-        'slack_channel_id',
-        'spotify_client_id',
-        'spotify_client_secret',
-        'spotify_playlist_id',
-    ]
-
     SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token'
 
-    def __init__(self):
+    def __init__(self, client_session: ClientSession, config: Config):
 
-        self.client_session = None
+        self.client_session = client_session
+
+        self.server_domain = config.server_domain
+        self.slack_channel_id = config.slack_channel_id
+        self.spotify_client_id = config.spotify_client_id
+        self.spotify_client_secret = config.spotify_client_secret
+        self.spotify_playlist_id = config.spotify_playlist_id
 
         self.authorization_code = None
         self.access_token = None
@@ -28,19 +30,13 @@ class SpotifyClient:
         self.scope = None
         self.token_type = None
 
-        with open('config.json') as config_file:
-            config = json.load(config_file)
-
-        self._validate_config(config)
-        self._init_config(config)
-
     @property
     def redirect_uri(self):
         return f'http://{self.server_domain}/authorize/'
 
     @property
     def encoded_redirect_uri(self):
-        return urllib.parse.quote_plus(self.redirect_uri)
+        return quote_plus(self.redirect_uri)
 
     @property
     def auth_redirect_url(self):
@@ -61,20 +57,6 @@ class SpotifyClient:
     @property
     def _playlist_add_url(self):
         return f'https://api.spotify.com/v1/playlists/{self.spotify_playlist_id}/tracks'
-
-    def _validate_config(self, config):
-        for config_param in self.CONFIG_PARAMS:
-            if config_param not in config:
-                raise ValueError(f'Param {config_param} not present in configuration.')
-
-            param_value = config[config_param]
-            if not (param_value and isinstance(param_value, str)):
-                raise ValueError(f'Invalid value {param_value} for param {config_param}')
-
-    def _init_config(self, config):
-        for config_param, param_value in config.items():
-            setattr(self, config_param, param_value)
-
 
     def _update_tokens(self, now, token_json):
         seconds = int(token_json.pop('expires_in'))
@@ -146,4 +128,3 @@ class SpotifyClient:
     async def authorize(self, authorization_code):
         self.authorization_code = authorization_code
         await self._set_tokens()
-
