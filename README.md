@@ -23,14 +23,14 @@ $ git clone https://github.com/georgejdanforth/slack-spotify-bot.git && cd slack
 ```
 4. Create a new config file:
 ```
-$ cp example.config.json config.json
+$ cp example.env .env
 ```
-5. Using your `$EDITOR` of choice, open up `config.json` and populate the config parameters. The parameters are:
-    * `server_domain`: Domain name or IP of the server hosting this service. Make sure to exclude `http://` from this. I just use my instance public IP for this parameter but if you'd like a proper domain name you're welcome to configure that yourself.
-    * `slack_channel_id`: ID of the Slack channel to listen to for spotify links
-    * `spotify_client_id`: Your Spotify API client ID
-    * `spotify_client_secret`: Your Spotify API client secret
-    * `spotify_playlist_id`: ID of the Spotify playlist to insert tracks into. This playlist should be owned by the same user holding the API credentials.
+5. Using your `$EDITOR` of choice, open up `.env` and populate the config parameters. The parameters are:
+    * `SERVER_DOMAIN`: Domain name or IP of the server hosting this service. Make sure to exclude `http://` from this. I just use my instance public IP for this parameter but if you'd like a proper domain name you're welcome to configure that yourself.
+    * `SLACK_CHANNEL_ID`: ID of the Slack channel to listen to for spotify links
+    * `SPOTIFY_CLIENT_ID`: Your Spotify API client ID
+    * `SPOTIFY_CLIENT_SECRET`: Your Spotify API client secret
+    * `SPOTIFY_PLAYLIST_ID`: ID of the Spotify playlist to insert tracks into. This playlist should be owned by the same user holding the API credentials.
 
 6. Create the Docker image:
 ```
@@ -38,7 +38,7 @@ sudo docker build -t slack-spotify-bot .
 ```
 7. Run the Docker image:
 ```
-docker run -p 8080:8080 -p 80:80 -d slack-spotify-bot prod
+docker run -p 8080:8080 -p 80:80 -d --env-file /path/to/your/.env slack-spotify-bot prod
 ```
 
 ### Connecting to Spotify
