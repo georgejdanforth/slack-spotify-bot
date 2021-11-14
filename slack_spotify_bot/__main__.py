@@ -1,5 +1,6 @@
 import click
 
+from slack_spotify_bot.app import run_app
 from slack_spotify_bot.config import load_config
 
 
@@ -15,7 +16,7 @@ def run(env, config):
         raise ValueError(f'Expected env to be one of: "dev", "prod". Got: {env}')
 
     config = load_config(config)
-    print(config)
+    run_app(port, config)
 
 
 run()
