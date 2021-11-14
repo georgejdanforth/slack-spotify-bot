@@ -1,8 +1,7 @@
-import logging
-import sys
-
 from aiohttp import ClientSession, web
-from spotify_client import SpotifyClient
+
+from slack_spotify_bot.config import Config
+from slack_spotify_bot.spotify_client import SpotifyClient
 
 
 routes = web.RouteTableDef()
@@ -38,32 +37,19 @@ async def authorize(request):
     return web.HTTPFound(request.app['spotify_client'].auth_redirect_url)
 
 
-async def startup_spotify_client(app):
-    app['spotify_client'] = SpotifyClient()
-    app['spotify_client'].client_session = await ClientSession().__aenter__()
+def run_app(port: int, config: Config):
 
+    async def on_startup(app):
+        client_session = await ClientSession().__aenter__()
+        app['spotify_client'] = SpotifyClient(client_session, config)
 
-async def cleanup_spotify_client(spp):
-    await app['spotify_client'].client_session.__aexit__(None, None, None)
-
-
-if __name__ == '__main__':
-
-    if len(sys.argv) != 2 or sys.argv[1] not in ['dev', 'prod']:
-        raise ValueError('Expected config param: "dev" or "prod".')
-
-    log_level, port = {
-        'dev': (logging.DEBUG, 8080),
-        'prod': (logging.INFO, 80),
-    }[sys.argv[1]]
-
-    logging.basicConfig(level=log_level)
+    async def on_cleanup(app):
+        await app['spotify_client'].client_session.__aexit__(None, None, None)
 
     app = web.Application()
 
-    app.on_startup.append(startup_spotify_client)
-    app.on_cleanup.append(cleanup_spotify_client)
+    app.on_startup.append(on_startup)
+    app.on_cleanup.append(on_cleanup)
     app.add_routes(routes)
 
     web.run_app(app, port=port)
-
